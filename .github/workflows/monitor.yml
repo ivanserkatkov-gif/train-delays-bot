@@ -2,7 +2,7 @@ name: Train delays monitor
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/5 2-23 * * *"
   workflow_dispatch: {}
 
 permissions:
