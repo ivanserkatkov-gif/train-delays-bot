@@ -108,7 +108,7 @@ def compose(asof: str, current: dict) -> str:
     for num, info in sorted(current.items()):
                lines.append(
             f"▫️ №{num} {info['route']} — затримка {fmt_minutes(info['minutes'])}. "
-            f"Відправився зі ст. {info['station']}"
+            f"зі ст. {info['station']}"
         )
     lines += ["", FOOTER]
     return "\n".join(lines)[:1000]
