@@ -2,14 +2,14 @@
   "published": {
     "6258": {
       "route": "Одеса-Головна → Вапнярка",
-      "minutes": 68,
-      "station": "Кодима"
+      "minutes": 70,
+      "station": "Попелюхи"
     },
     "6251": {
       "route": "Вапнярка → Одеса-Головна",
-      "minutes": 14,
-      "station": "Крижопіль"
+      "minutes": 16,
+      "station": "Попелюхи"
     }
   },
-  "last_id": 22786
+  "last_id": 22788
 }
