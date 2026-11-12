@@ -89,9 +89,14 @@ def parse_post(text: str):
 
 
 def needs_publish(current: dict, published: dict) -> bool:
+    """Публікуємо, якщо змінився список потягів, станція або затримка (на CHANGE_MIN хв і більше)."""
     if set(current) != set(published):
         return True
-    return any(abs(i["minutes"] - published[n]["minutes"]) >= CHANGE_MIN for n, i in current.items())
+    return any(
+        i["station"] != published[n]["station"]
+        or abs(i["minutes"] - published[n]["minutes"]) >= CHANGE_MIN
+        for n, i in current.items()
+    )
 
 
 def compose(asof: str, current: dict) -> str:
@@ -101,7 +106,10 @@ def compose(asof: str, current: dict) -> str:
         lines.append(f"Станом на {time_part}")
     lines.append("")
     for num, info in sorted(current.items()):
-        lines.append(f"▫️ №{num} {info['route']} — затримка {fmt_minutes(info['minutes'])} (ст. {info['station']})")
+               lines.append(
+            f"▫️ №{num} {info['route']} — затримка {fmt_minutes(info['minutes'])}. "
+            f"Відправився зі ст. {info['station']}"
+        )
     lines += ["", FOOTER]
     return "\n".join(lines)[:1000]
 
