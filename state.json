@@ -2,9 +2,9 @@
   "published": {
     "6201": {
       "route": "Роздільна-1 → Одеса-Головна",
-      "minutes": 12,
-      "station": "Карпове"
+      "minutes": 10,
+      "station": "Усатове"
     }
   },
-  "last_id": 22977
+  "last_id": 22979
 }
