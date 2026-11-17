@@ -2,9 +2,9 @@
   "published": {
     "6256": {
       "route": "Одеса-Головна → Вапнярка",
-      "minutes": 112,
-      "station": "Крижопіль"
+      "minutes": 108,
+      "station": "Княжеве"
     }
   },
-  "last_id": 23402
+  "last_id": 23404
 }
