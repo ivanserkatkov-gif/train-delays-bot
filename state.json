@@ -2,14 +2,14 @@
   "published": {
     "6252": {
       "route": "Одеса-Головна → Вапнярка",
-      "minutes": 48,
-      "station": "Затишшя"
+      "minutes": 46,
+      "station": "Мардарівка"
     },
     "6254": {
       "route": "Одеса-Головна → Подільськ",
-      "minutes": 14,
-      "station": "Усатове"
+      "minutes": 7,
+      "station": "Єреміївка"
     }
   },
-  "last_id": 23485
+  "last_id": 23487
 }
