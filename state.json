@@ -2,14 +2,14 @@
   "published": {
     "6258": {
       "route": "Одеса-Головна → Вапнярка",
-      "minutes": 81,
-      "station": "Чубівка"
+      "minutes": 74,
+      "station": "Слобідка"
     },
     "6206": {
       "route": "Одеса-Головна → Мигаєве",
-      "minutes": 94,
-      "station": "Усатове"
+      "minutes": 110,
+      "station": "Дачне"
     }
   },
-  "last_id": 24042
+  "last_id": 24044
 }
