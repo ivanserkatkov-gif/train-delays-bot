@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Одноразовий запуск: бере нові новини з RSS сайту громади і публікує їх
-у Telegram-каналі: зображення + заголовок + короткий уривок + посилання.
+Одноразовий запуск: бере нові новини з RSS сайту громади і публікує у
+Telegram-каналі ЛИШЕ ті, у тексті яких є прихована мітка <!--tg-->:
+зображення + заголовок + короткий уривок + посилання + блок соцмереж.
 
 Змінні середовища:
   TG_BOT_TOKEN    токен бота (адмін каналу)
@@ -9,6 +10,7 @@
   REVIEW_CHAT_ID  ваш числовий user id (режим review)
   MODE            review (чернетки вам у приват) | auto (одразу в канал)
   MAX_PER_RUN     скільки новин максимум за один запуск (за замовчуванням 5)
+  REQUIRE_MARKER  1 (за замовчуванням) — лише з міткою; 0 — усі новини
 """
 
 import html
@@ -34,6 +36,9 @@ FOOTER_HTML = (
     '<a href="https://www.youtube.com/channel/UC1_o-RO_R65hTodir_rDHNQ">Youtube</a> · '
     '<a href="https://t.me/rozdilnianskahromada/11702">Інфобокс</a>'
 )
+# Публікуємо лише новини, у тексті яких є прихована мітка <!--tg-->
+REQUIRE_MARKER = os.environ.get("REQUIRE_MARKER", "1") == "1"
+MARKER_RE = re.compile(r"<!--\s*tg\s*-->", re.IGNORECASE)
 STATE_FILE = Path("state_site.json")
 UA = {"User-Agent": "Mozilla/5.0 (compatible; community-monitor)"}
 
@@ -101,7 +106,15 @@ def tg(method: str, data: dict, files: dict | None = None) -> None:
         raise RuntimeError(f"Telegram {method}: {r.status_code} {r.text[:300]}")
 
 
-def deliver(item: dict) -> None:
+def fetch_page(url: str) -> str | None:
+    try:
+        return http_get(url).decode("utf-8", errors="replace")
+    except Exception as exc:
+        print("Сторінку новини не отримано:", url, exc)
+        return None
+
+
+def deliver(item: dict, page_html: str | None) -> None:
     if MODE == "auto":
         chat, prefix = TARGET, ""
     else:
@@ -113,7 +126,7 @@ def deliver(item: dict) -> None:
 
     img = None
     try:
-        image_url = find_og_image(http_get(item["link"]).decode("utf-8", errors="replace"))
+        image_url = find_og_image(page_html) if page_html else None
         if image_url:
             img = http_get(image_url)
     except Exception as exc:  # немає зображення — публікуємо без нього
@@ -142,7 +155,7 @@ def main() -> None:
 
     if not STATE_FILE.exists():  # перший запуск
         if MODE == "review":
-            deliver(items[0])   # зразок: найновіша новина як чернетка
+            deliver(items[0], fetch_page(items[0]["link"]))   # зразок як чернетка
             print("Надіслано зразок:", items[0]["link"])
         else:
             print("Базову позначку встановлено, публікацій немає.")
@@ -155,14 +168,24 @@ def main() -> None:
     if not new:
         print("Нових новин немає.")
         return
-    for item in new[:MAX_PER_RUN]:
-        deliver(item)
+    sent = skipped = 0
+    for item in new:
+        if sent >= MAX_PER_RUN:
+            print("Ліміт за запуск досягнуто, решта — наступного разу.")
+            break
+        page_html = fetch_page(item["link"])
+        if page_html is None:
+            continue  # спробуємо наступного запуску
+        if REQUIRE_MARKER and not MARKER_RE.search(page_html):
+            skipped += 1  # без мітки не публікуємо; перевіримо знову, якщо мітку додадуть пізніше
+            continue
+        deliver(item, page_html)
         state["seen"].append(item["link"])
         save(state)
+        sent += 1
         print("Надіслано:", item["link"])
-    rest = len(new) - MAX_PER_RUN
-    if rest > 0:
-        print(f"Залишилось {rest} новин на наступний запуск.")
+    if skipped:
+        print(f"Без мітки <!--tg-->: пропущено {skipped}.")
 
 
 if __name__ == "__main__":
