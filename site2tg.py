@@ -13,6 +13,15 @@ MODE = os.environ.get("MODE", "review")
 MAX_PER_RUN = int(os.environ.get("MAX_PER_RUN", "5"))
 SNIPPET_LEN = int(os.environ.get("SNIPPET_LEN", "280"))
 LINK_TEXT = os.environ.get("LINK_TEXT", "Читати на сайті")
+FOOTER_HTML = (
+    '<a href="https://t.me/RozdilnyanskaSpilnota">Чат</a> · '
+    '<a href="https://t.me/rozdilnianskahromada">TG</a> · '
+    '<a href="https://bit.ly/3PVnh4a">Viber</a> · '
+    '<a href="https://www.instagram.com/rozdilnianskahromada">Insta</a> · '
+    '<a href="https://www.facebook.com/rozdilnianskahromada">FB</a> · '
+    '<a href="https://www.youtube.com/channel/UC1_o-RO_R65hTodir_rDHNQ">Youtube</a> · '
+    '<a href="https://t.me/rozdilnianskahromada/11702">Інфобокс</a>'
+)
 STATE_FILE = Path("state_site.json")
 UA = {"User-Agent": "Mozilla/5.0 (compatible; community-monitor)"}
 
