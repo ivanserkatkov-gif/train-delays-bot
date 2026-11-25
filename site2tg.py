@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+"""
+Одноразовий запуск: бере нові новини з RSS сайту громади і публікує їх
+у Telegram-каналі: зображення + заголовок + короткий уривок + посилання.
+
+Змінні середовища:
+  TG_BOT_TOKEN    токен бота (адмін каналу)
+  TARGET_CHANNEL  за замовчуванням @rozdilnianskahromada
+  REVIEW_CHAT_ID  ваш числовий user id (режим review)
+  MODE            review (чернетки вам у приват) | auto (одразу в канал)
+  MAX_PER_RUN     скільки новин максимум за один запуск (за замовчуванням 5)
+"""
+
 import html
 import json
 import os
@@ -32,6 +44,7 @@ def http_get(url: str) -> bytes:
 
 
 def parse_rss(xml_bytes: bytes):
+    """[{title, link, desc}] у порядку, як у стрічці (нові зверху)."""
     root = ET.fromstring(xml_bytes)
     items = []
     for it in root.iter("item"):
@@ -48,7 +61,7 @@ def parse_rss(xml_bytes: bytes):
 
 def clean_snippet(desc: str) -> str:
     text = html.unescape(re.sub(r"<[^>]+>", " ", desc))
-    text = text.replace("\u2800", " ")
+    text = text.replace("⠀", " ")           # «⠀» (braille blank) із сайту
     text = re.sub(r"\s+", " ", text).strip()
     text = re.sub(r"\.{3}$|…$", "", text).rstrip()
     if len(text) > SNIPPET_LEN:
@@ -75,11 +88,12 @@ def build_caption(item: dict, prefix: str = "") -> str:
     if snippet:
         parts.append(html.escape(snippet, quote=False))
     parts.append(f'<a href="{html.escape(item["link"])}">{html.escape(LINK_TEXT, quote=False)}</a>')
+    parts.append(FOOTER_HTML)
     return prefix + "\n\n".join(parts)
 
 
 def tg(method: str, data: dict, files: dict | None = None) -> None:
-    import requests
+    import requests  # ставиться у workflow
 
     token = os.environ["TG_BOT_TOKEN"]
     r = requests.post(f"https://api.telegram.org/bot{token}/{method}", data=data, files=files, timeout=60)
@@ -102,7 +116,7 @@ def deliver(item: dict) -> None:
         image_url = find_og_image(http_get(item["link"]).decode("utf-8", errors="replace"))
         if image_url:
             img = http_get(image_url)
-    except Exception as exc:
+    except Exception as exc:  # немає зображення — публікуємо без нього
         print("Зображення не отримано:", exc)
 
     if img and len(caption) <= 1024:
@@ -126,9 +140,9 @@ def main() -> None:
         return
     links = [i["link"] for i in items]
 
-    if not STATE_FILE.exists():
+    if not STATE_FILE.exists():  # перший запуск
         if MODE == "review":
-            deliver(items[0])
+            deliver(items[0])   # зразок: найновіша новина як чернетка
             print("Надіслано зразок:", items[0]["link"])
         else:
             print("Базову позначку встановлено, публікацій немає.")
@@ -137,7 +151,7 @@ def main() -> None:
 
     state = json.loads(STATE_FILE.read_text(encoding="utf-8"))
     seen = set(state["seen"])
-    new = [i for i in reversed(items) if i["link"] not in seen]
+    new = [i for i in reversed(items) if i["link"] not in seen]   # від найстаріших до найновіших
     if not new:
         print("Нових новин немає.")
         return
